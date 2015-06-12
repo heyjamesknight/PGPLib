@@ -1157,6 +1157,12 @@ pgp_encrypt_pk_sesskey(const pgp_key_t *key, pgp_pk_sesskey_t *sesskey)
     uint8_t			*encoded_m_buf;
     size_t			 sz_encoded_m_buf;
     
+    if (memcmp(key->encid, "\0\0\0\0\0\0\0\0", 8) == 0) {
+        pubkey = pgp_get_pubkey(key);
+    } else {
+        pubkey = &key->enckey;
+    }
+    
     unencoded_m_buf = calloc(1, cipherinfo.keysize + 1 + 2);
     if (unencoded_m_buf == NULL) {
         (void) fprintf(stderr,

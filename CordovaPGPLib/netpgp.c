@@ -1233,7 +1233,7 @@ netpgp_generate_key(netpgp_t *netpgp, char *id, int numbits)
     
     cp = NULL;
     pgp_sprint_keydata(netpgp->io, NULL, key, &cp, "signature ", &key->key.seckey.pubkey, 0);
-    (void) fprintf(stdout, "%s", cp);
+//    (void) fprintf(stdout, "%s", cp);
     cc = snprintf(dir, sizeof(dir), "%s/%.16s", netpgp_getvar(netpgp, "homedir"), &cp[ID_OFFSET]);
     netpgp_setvar(netpgp, "generated userid", &dir[cc - 16]);
     
@@ -1585,21 +1585,17 @@ netpgp_verify_memory(netpgp_t *netpgp,
             m = 1;
         }
         
-        unsigned from = 0;
-        unsigned saved_sigc = 0;
-        
         // Get the pubkey out of the signature:
         for (int i = 0; i < result.validc; i++) {
-            const pgp_sig_info_t *valid_sig = &result.valid_sigs[i];
-            const pgp_key_t *result_key = pgp_getkeybyid(io, netpgp->pubring, valid_sig->signer_id, &from, NULL);
+            sigs[i] = calloc(PGP_KEY_ID_SIZE + 1, sizeof(char));
             
-            char *key_result = pgp_export_key(io, result_key, NULL);
-            sigs[saved_sigc++] = key_result;
+            const pgp_sig_info_t *valid_sig = &result.valid_sigs[i];
+            userid_to_id(valid_sig->signer_id, sigs[i]);
         }
         
         *sigc = result.validc;
         
-		return (int) m;
+        return (int) m;
 	}
 	if (result.validc + result.invalidc + result.unknownc == 0) {
 		(void) fprintf(io->errs,

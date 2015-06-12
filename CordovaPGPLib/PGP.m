@@ -187,8 +187,6 @@ static NSString *const PGPDefaultUsername = @"default-user";
         return;
     }
     
-    NSLog(@"generated id: %s", netpgp_getvar(self.netpgp, "generated userid"));
-    
     if (publicKeyArmored && privateKeyArmored) {
         completionBlock(publicKeyArmored, privateKeyArmored);
     }
@@ -318,9 +316,9 @@ static NSString *const PGPDefaultUsername = @"default-user";
     
     // Silences analyzer warning:
     NSUInteger count = publicKeys.count;
-    char **resultKeys = calloc(count, sizeof(char *));
+    char **resultKeyIds = calloc(count, sizeof(char *));
     
-    if (resultKeys == NULL) {
+    if (resultKeyIds == NULL) {
         errorBlock([PGP errorWithCause:@"PGP verifyData: Failed to alloc key array."]);
         return;
     }
@@ -332,27 +330,30 @@ static NSString *const PGPDefaultUsername = @"default-user";
     int outsize = netpgp_verify_memory(self.netpgp,
                                        data.bytes, data.length,
                                        outbuf, maxsize,
-                                       resultKeys, &validSignatureCount,
+                                       resultKeyIds, &validSignatureCount,
                                        0);
     
-    NSMutableArray *validSignatureKeys = [NSMutableArray array];
+    NSMutableArray *verifiedKeyIds = [NSMutableArray array];
     
     for (int i = 0; i < validSignatureCount; i++) {
-        char *validKey = resultKeys[i];
+        char *verifiedKeyId = resultKeyIds[i];
         
-        if (validKey) {
-            NSString *validKeyString = [NSString stringWithCString:validKey encoding:NSUTF8StringEncoding];
-            [validSignatureKeys addObject:validKeyString];
+        if (verifiedKeyId) {
+            NSString *verifiedKeyIdString = [NSString stringWithCString:verifiedKeyId encoding:NSUTF8StringEncoding];
+            [verifiedKeyIds addObject:verifiedKeyIdString];
+            
+            free(verifiedKeyId);
+            resultKeyIds[i] = NULL;
         }
     }
     
-    if (resultKeys) {
-        free(resultKeys);
-        resultKeys = NULL;
+    if (resultKeyIds) {
+        free(resultKeyIds);
+        resultKeyIds = NULL;
     }
     
     completionBlock([NSData dataWithBytesNoCopy:outbuf length:outsize freeWhenDone:YES],
-                    [NSArray arrayWithArray:validSignatureKeys]);
+                    [NSArray arrayWithArray:verifiedKeyIds]);
 }
 
 
@@ -455,7 +456,7 @@ static NSString *const PGPDefaultUsername = @"default-user";
     
     netpgp_setvar(_netpgp, "hash", DEFAULT_HASH_ALG);
     netpgp_setvar(_netpgp, "max mem alloc", "4194304");
-    netpgp_setvar(_netpgp, "res", self.outPath.UTF8String);
+//    netpgp_setvar(_netpgp, "res", self.outPath.UTF8String);
     
     switch (mode) {
         case PGPModeGenerate:

@@ -34,7 +34,7 @@ typedef NS_ENUM(NSUInteger, PGPMode) {
 
 #pragma mark Constructors
 
-
+// Each constructor initializes netpgp properly for the required action:
 + (instancetype)keyGenerator;
 + (instancetype)decryptorWithPrivateKey:(NSString *)privateKey;
 + (instancetype)encryptor;
@@ -74,7 +74,7 @@ typedef NS_ENUM(NSUInteger, PGPMode) {
 
 - (void)verifyData:(NSData *)data
         publicKeys:(NSArray *)publicKeys
-   completionBlock:(void (^)(NSData *verifiedData, NSArray *verifiedKeys))completionBlock
+   completionBlock:(void (^)(NSData *verifiedData, NSArray *verifiedKeyIds))completionBlock
         errorBlock:(void (^)(NSError *))errorBlock;
 
 

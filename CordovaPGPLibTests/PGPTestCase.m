@@ -151,6 +151,7 @@
             XCTAssertNotNil(verifiedData, @"verifiedData is nil.");
             XCTAssertNotNil(verifiedKeys, @"verifiedKeys is nil.");
             XCTAssertEqual(verifiedKeys.count, 1, @"Verify failed, failed to return verified keys.");
+            NSLog(@"verified keyid: %@", verifiedKeys[0]);
             
         } errorBlock:^(NSError *error) {
             XCTFail(@"Failed validating: %@", error);
