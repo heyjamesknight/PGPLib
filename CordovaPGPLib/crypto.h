@@ -213,6 +213,16 @@ pgp_decrypt_buf(pgp_io_t *,
 			int,
 			pgp_cbfunc_t *);
 
+pgp_memory_t *
+pgp_decrypt_verify_buf(pgp_io_t *,
+                       const void *,
+                       const size_t,
+                       char **sigs,
+                       size_t *sigc,
+                       pgp_keyring_t *,
+                       pgp_keyring_t *,
+                       const unsigned);
+
 /* Keys */
 pgp_key_t  *pgp_rsa_new_selfsign_key(const int,
 			const unsigned long, uint8_t *, const char *,

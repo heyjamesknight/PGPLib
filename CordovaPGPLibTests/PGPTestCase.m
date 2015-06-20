@@ -35,6 +35,52 @@
     [super tearDown];
 }
 
+- (void)testAll {
+    void (^errorBlock)(NSError *) = ^(NSError *error) {
+        XCTFail(@"Failed: %@", error);
+    };
+    
+    NSString *testPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"suzy" ofType:@"gpg"];
+    NSString *testSecretPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"suzysecret" ofType:@"gpg"];
+    
+    NSString *testPublic = [NSString stringWithContentsOfFile:testPath encoding:NSUTF8StringEncoding error:nil];
+    NSString *testPrivate = [NSString stringWithContentsOfFile:testSecretPath encoding:NSUTF8StringEncoding error:nil];
+
+    PGP *signer = [PGP signerWithPrivateKey:testPrivate];
+    
+    NSString *testMessage = @"Testing all.";
+    [signer signData:[testMessage dataUsingEncoding:NSUTF8StringEncoding] completionBlock:^(NSData *signedData) {
+        
+        NSLog(@"Signed message:\n%@", [[NSString alloc] initWithData:signedData encoding:NSUTF8StringEncoding]);
+        
+        // Signing was successful, now encrypt the text:
+        PGP *encryptor = [PGP encryptor];
+        [encryptor encryptData:signedData publicKeys:@[testPublic] completionBlock:^(NSData *encryptedData) {
+            
+            NSLog(@"Encrypted message:\n%@", [[NSString alloc] initWithData:encryptedData encoding:NSUTF8StringEncoding]);
+            
+            // Decrypt the data:
+            PGP *decryptor = [PGP decryptorWithPrivateKey:testPrivate];
+            [decryptor decryptAndVerifyData:encryptedData publicKeys:@[testPublic] completionBlock:^(NSString *verifiedData, NSArray *verifiedKeyIds) {
+                
+                NSMutableArray *verifiedSignatures = [NSMutableArray array];
+                
+                for (NSString *keyId in verifiedKeyIds) {
+                    [verifiedSignatures addObject:@{@"keyid": keyId, @"valid": @YES}];
+                }
+                
+                NSLog(@"Verified signatures:\n%@", verifiedSignatures);
+                NSLog(@"Decrypted message:\n%@", verifiedData);
+                
+                XCTAssertEqualObjects(verifiedData, testMessage);
+                
+            } errorBlock:errorBlock];
+            
+        } errorBlock:errorBlock];
+        
+    } errorBlock:errorBlock];
+}
+
 
 - (void)testKeyGeneration {
     NSDictionary *options = @{@"keyType": @1,
@@ -139,6 +185,31 @@
 }
 
 
+- (void)testHumanPractice {
+    NSString *publicKeyJsonPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"all-public-keys" ofType:@"json"];
+    NSArray *publicKeys = [NSJSONSerialization JSONObjectWithData:[NSData dataWithContentsOfFile:publicKeyJsonPath] options:NSJSONReadingAllowFragments error:nil];
+    
+    NSString *messagePath = [[NSBundle bundleForClass:[self class]] pathForResource:@"message" ofType:@"txt"];
+    NSData *message = [NSData dataWithContentsOfFile:messagePath];
+    
+    NSString *privateKeyPath = [[NSBundle bundleForClass:[self class]] pathForResource:@"private-key" ofType:@"txt"];
+    NSString *privateKey = [NSString stringWithContentsOfFile:privateKeyPath encoding:NSUTF8StringEncoding error:nil];
+    
+    PGP *decryptor = [PGP decryptorWithPrivateKey:privateKey];
+    
+    [decryptor decryptAndVerifyData:message publicKeys:publicKeys completionBlock:^(NSString *decryptedMessage,
+                                                                                    NSArray *verifiedKeyIds) {
+        
+        NSLog(@"Decrypted:\n%@", decryptedMessage);
+        NSLog(@"Verified key ids:\n%@", verifiedKeyIds);
+        
+    } errorBlock:^(NSError *error) {
+        XCTFail(@"Failed to decrypt: %@", error);
+    }];
+    
+}
+
+
 - (void)testSignAndVerifyWithPublicKey:(NSString *)publicKey privateKey:(NSString *)privateKey {
     NSString *testMessage = @"Testing signing/verifying.";
     
@@ -146,11 +217,13 @@
     [signer signData:[testMessage dataUsingEncoding:NSUTF8StringEncoding] completionBlock:^(NSData *result) {
         
         PGP *verifier = [PGP verifier];
-        [verifier verifyData:result publicKeys:@[publicKey] completionBlock:^(NSData *verifiedData, NSArray *verifiedKeys) {
+        [verifier verifyData:result publicKeys:@[publicKey] completionBlock:^(NSString *verifiedMessage, NSArray *verifiedKeys) {
             
-            XCTAssertNotNil(verifiedData, @"verifiedData is nil.");
+            XCTAssertNotNil(verifiedMessage, @"verifiedData is nil.");
             XCTAssertNotNil(verifiedKeys, @"verifiedKeys is nil.");
             XCTAssertEqual(verifiedKeys.count, 1, @"Verify failed, failed to return verified keys.");
+            XCTAssertEqualObjects(verifiedMessage, testMessage, @"Verify failed to return original message: %@", verifiedMessage);
+            
             NSLog(@"verified keyid: %@", verifiedKeys[0]);
             
         } errorBlock:^(NSError *error) {
@@ -188,5 +261,6 @@
                XCTFail(@"Failed encrypting: %@", error);
            }];
 }
+
 
 @end

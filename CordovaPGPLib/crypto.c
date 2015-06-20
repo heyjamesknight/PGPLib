@@ -47,6 +47,7 @@
  * limitations under the License.
  */
 #include "config.h"
+#include "netpgpsdk.h"
 
 #ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
@@ -322,6 +323,15 @@ write_parsed_cb(const pgp_packet_t *pkt, pgp_cbdata_t *cbinfo)
 		/* They're handled in parse_packet() */
 		/* and nothing else needs to be done */
 		break;
+            
+    // These four are to add validation to decryption:
+    case PGP_PTAG_CT_1_PASS_SIG:
+    case PGP_PTAG_CT_SIGNATURE_HEADER:
+    case PGP_PTAG_CT_SIGNATURE:
+        break;
+            
+    case PGP_PTAG_CT_SIGNATURE_FOOTER:
+        return pgp_sig_cb(pkt, cbinfo);
 
 	default:
 		if (pgp_get_debug_level(__FILE__)) {
@@ -648,4 +658,68 @@ pgp_decrypt_buf(pgp_io_t *io,
 
 	/* if we didn't get the passphrase, return NULL */
 	return (parse->cbinfo.gotpass) ? outmem : NULL;
+}
+
+pgp_memory_t *
+pgp_decrypt_verify_buf(pgp_io_t *io,
+                       const void *input,
+                       const size_t insize,
+                       char **sigs,
+                       size_t *sigc,
+                       pgp_keyring_t *secring,
+                       pgp_keyring_t *pubring,
+                       const unsigned use_armour) {
+    
+    pgp_stream_t	*parse = NULL;
+    pgp_memory_t	*outmem;
+    pgp_memory_t	*inmem;
+    const int	 printerrors = 1;
+    
+    if (input == NULL) {
+        (void) fprintf(io->errs,
+                       "pgp_encrypt_buf: null memory\n");
+        return 0;
+    }
+    
+    inmem = pgp_memory_new();
+    pgp_memory_add(inmem, input, insize);
+    
+    /* set up to read from memory */
+    pgp_setup_memory_read(io, &parse, inmem,
+                          NULL,
+                          write_parsed_cb,
+                          0);
+    
+    /* setup for writing decrypted contents to given output file */
+    pgp_setup_memory_write(&parse->cbinfo.output, &outmem, insize);
+    
+    /* setup keyring and passphrase callback */
+    parse->cbinfo.cryptinfo.secring = secring;
+    parse->cbinfo.cryptinfo.pubring = pubring;
+    parse->cbinfo.passfp = NULL;
+    parse->cbinfo.cryptinfo.getpassphrase = NULL;
+    parse->cbinfo.sshseckey = NULL;
+    parse->cbinfo.numtries = 0;
+    
+    /* Set up armour/passphrase options */
+    if (use_armour) {
+        pgp_reader_push_dearmour(parse);
+    }
+    
+    /* Do it */
+    pgp_parse(parse, printerrors);
+    
+    /* Unsetup */
+    if (use_armour) {
+        pgp_reader_pop_dearmour(parse);
+    }
+    
+    /* tidy up */
+    pgp_teardown_memory_read(parse, inmem);
+    
+    pgp_writer_close(parse->cbinfo.output);
+    pgp_output_delete(parse->cbinfo.output);
+    
+    /* if we didn't get the passphrase, return NULL */
+    return (parse->cbinfo.gotpass) ? outmem : NULL;
 }

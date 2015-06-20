@@ -107,32 +107,22 @@ typedef void (^CordovaPGPErrorBlock)(NSError *);
         
         // Decrypt the data:
         PGP *decryptor = [PGP decryptorWithPrivateKey:privateKey];
+
+        [decryptor decryptAndVerifyData:[msg dataUsingEncoding:NSUTF8StringEncoding] publicKeys:publicKeys completionBlock:^(NSString *decryptedMessage, NSArray *verifiedKeyIds) {
+            
+            NSMutableArray *verifiedSignatures = [NSMutableArray array];
+            
+            for (NSString *keyId in verifiedKeyIds) {
+                [verifiedSignatures addObject:@{@"keyid": keyId, @"valid": @YES}];
+            }
+            
+            NSDictionary *result = @{@"text": decryptedMessage, @"signatures": [NSArray arrayWithArray:verifiedSignatures]};
+            
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
+                                                          messageAsDictionary:result];
+            
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         
-        [decryptor decryptData:[msg dataUsingEncoding:NSUTF8StringEncoding] completionBlock:^(NSData *decryptedData) {
-            
-            // Verify the decrypted data:
-            PGP *verifier = [PGP verifier];
-            
-            [verifier verifyData:decryptedData publicKeys:publicKeys completionBlock:^(NSData *verifiedData, NSArray *verifiedKeyIds) {
-                // Return the verified data as well as a list of keys which had signed it:
-                
-                NSString *verifiedMessage = [[NSString alloc] initWithData:verifiedData encoding:NSUTF8StringEncoding];
-                
-                NSMutableArray *verifiedSignatures = [NSMutableArray array];
-                
-                for (NSString *keyId in verifiedKeyIds) {
-                    [verifiedSignatures addObject:@{@"keyid": keyId, @"valid": @YES}];
-                }
-                
-                NSDictionary *result = @{@"text": verifiedMessage, @"signatures": [NSArray arrayWithArray:verifiedSignatures]};
-                
-                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK
-                                                              messageAsDictionary:result];
-                
-                [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-                
-            } errorBlock:errorBlock];
-            
         } errorBlock:errorBlock];
     }];
 }
@@ -141,7 +131,7 @@ typedef void (^CordovaPGPErrorBlock)(NSError *);
 #pragma mark Private methods
 
 
-- (void(^)(NSError *))createErrorBlockForCommand:(CDVInvokedUrlCommand *)command {
+- (void(^)(NSError *error))createErrorBlockForCommand:(CDVInvokedUrlCommand *)command {
     return ^(NSError *error) {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                           messageAsString:error.description];

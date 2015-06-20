@@ -39,6 +39,10 @@
 		A79205221B2A1D1000C89354 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A79205201B2A1CFC00C89354 /* libz.dylib */; };
 		A79205231B2A1D1400C89354 /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = A792051E1B2A1CEB00C89354 /* libbz2.dylib */; };
 		A7C2C28A1B2A1FA7001EA037 /* CordovaPGP.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = A7C2C2891B2A1F8B001EA037 /* CordovaPGP.h */; };
+		A7FA50481B2F4B3B00AE6B2F /* public-key.txt in Resources */ = {isa = PBXBuildFile; fileRef = A7FA50441B2F4B3B00AE6B2F /* public-key.txt */; };
+		A7FA50491B2F4B3B00AE6B2F /* all-public-keys.json in Resources */ = {isa = PBXBuildFile; fileRef = A7FA50451B2F4B3B00AE6B2F /* all-public-keys.json */; };
+		A7FA504A1B2F4B3B00AE6B2F /* message.txt in Resources */ = {isa = PBXBuildFile; fileRef = A7FA50461B2F4B3B00AE6B2F /* message.txt */; };
+		A7FA504B1B2F4B3B00AE6B2F /* private-key.txt in Resources */ = {isa = PBXBuildFile; fileRef = A7FA50471B2F4B3B00AE6B2F /* private-key.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -125,6 +129,10 @@
 		A792051E1B2A1CEB00C89354 /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = usr/lib/libbz2.dylib; sourceTree = SDKROOT; };
 		A79205201B2A1CFC00C89354 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		A7C2C2891B2A1F8B001EA037 /* CordovaPGP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CordovaPGP.h; sourceTree = "<group>"; };
+		A7FA50441B2F4B3B00AE6B2F /* public-key.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "public-key.txt"; sourceTree = "<group>"; };
+		A7FA50451B2F4B3B00AE6B2F /* all-public-keys.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = "all-public-keys.json"; sourceTree = "<group>"; };
+		A7FA50461B2F4B3B00AE6B2F /* message.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = message.txt; sourceTree = "<group>"; };
+		A7FA50471B2F4B3B00AE6B2F /* private-key.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "private-key.txt"; sourceTree = "<group>"; };
 		DFFAECDAB39AFFC7395B6B0F /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -262,6 +270,7 @@
 		A79205051B2A18E600C89354 /* Test Keys */ = {
 			isa = PBXGroup;
 			children = (
+				A7FA504C1B2F4B3E00AE6B2F /* HP Test */,
 				A79205121B2A191300C89354 /* bob.gpg */,
 				A79205131B2A191300C89354 /* bobsecret.gpg */,
 				A79205141B2A191300C89354 /* steve.gpg */,
@@ -270,6 +279,17 @@
 				A79205171B2A191300C89354 /* suzysecret.gpg */,
 			);
 			name = "Test Keys";
+			sourceTree = "<group>";
+		};
+		A7FA504C1B2F4B3E00AE6B2F /* HP Test */ = {
+			isa = PBXGroup;
+			children = (
+				A7FA50441B2F4B3B00AE6B2F /* public-key.txt */,
+				A7FA50451B2F4B3B00AE6B2F /* all-public-keys.json */,
+				A7FA50461B2F4B3B00AE6B2F /* message.txt */,
+				A7FA50471B2F4B3B00AE6B2F /* private-key.txt */,
+			);
+			name = "HP Test";
 			sourceTree = "<group>";
 		};
 		EC0B9A536A294F8FE3E1BDFB /* Pods */ = {
@@ -363,10 +383,14 @@
 			files = (
 				A792051B1B2A191300C89354 /* stevesecret.gpg in Resources */,
 				A792051D1B2A191300C89354 /* suzysecret.gpg in Resources */,
+				A7FA50491B2F4B3B00AE6B2F /* all-public-keys.json in Resources */,
 				A79205191B2A191300C89354 /* bobsecret.gpg in Resources */,
 				A792051C1B2A191300C89354 /* suzy.gpg in Resources */,
+				A7FA504A1B2F4B3B00AE6B2F /* message.txt in Resources */,
+				A7FA504B1B2F4B3B00AE6B2F /* private-key.txt in Resources */,
 				A792051A1B2A191300C89354 /* steve.gpg in Resources */,
 				A79205181B2A191300C89354 /* bob.gpg in Resources */,
+				A7FA50481B2F4B3B00AE6B2F /* public-key.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

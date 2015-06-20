@@ -96,6 +96,7 @@ int netpgp_encrypt_memory(netpgp_t *, const char *, void *, const size_t, char *
 int netpgp_encrypt_memory_single(netpgp_t *, void *, const size_t, char *, size_t, int);
 int netpgp_encrypt_memory_multiple(netpgp_t *, void *, const size_t, char *, size_t, int);
 int netpgp_decrypt_memory(netpgp_t *, const void *, const size_t, char *, size_t, const int);
+int netpgp_decrypt_verify_memory(netpgp_t *, const void *, const size_t, char *, size_t, char **, size_t *, const int);
 
 /* match and hkp-related functions */
 int netpgp_match_keys_json(netpgp_t *, char **, char *, const char *, const int);

@@ -1783,6 +1783,49 @@ netpgp_decrypt_memory(netpgp_t *netpgp, const void *input, const size_t insize,
 	return (int)m;
 }
 
+/* decrypt and verify in one pass */
+
+int
+netpgp_decrypt_verify_memory(netpgp_t *netpgp, const void *input, const size_t insize,
+                             char *out, size_t outsize, char **sigs, size_t *sigc,
+                             const int armored) {
+    
+    pgp_memory_t	*mem;
+    pgp_io_t	*io;
+    unsigned	 realarmour;
+    unsigned	 sshkeys;
+    size_t		 m;
+    char		*numtries;
+    int            	 attempts;
+    
+    __PGP_USED(armored);
+    io = netpgp->io;
+    if (input == NULL) {
+        (void) fprintf(io->errs,
+                       "netpgp_decrypt_memory: no memory\n");
+        return 0;
+    }
+    realarmour = isarmoured(io, NULL, input, ARMOR_HEAD);
+    sshkeys = (unsigned)(netpgp_getvar(netpgp, "ssh keys") != NULL);
+    if ((numtries = netpgp_getvar(netpgp, "numtries")) == NULL ||
+        (attempts = atoi(numtries)) <= 0) {
+        attempts = MAX_PASSPHRASE_ATTEMPTS;
+    } else if (strcmp(numtries, "unlimited") == 0) {
+        attempts = INFINITE_ATTEMPTS;
+    }
+    
+    mem = pgp_decrypt_verify_buf(netpgp->io, input, insize, sigs, sigc, netpgp->secring, netpgp->pubring, 0);
+    if (mem == NULL) {
+        return -1;
+    }
+    
+    m = MIN(pgp_mem_len(mem), outsize);
+    (void) memcpy(out, pgp_mem_data(mem), m);
+    pgp_memory_free(mem);
+    
+    return (int)m;
+}
+
 /* wrappers for the ops_debug_level functions we added to openpgpsdk */
 
 /* set the debugging level per filename */

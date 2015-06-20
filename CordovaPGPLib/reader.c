@@ -133,6 +133,7 @@ __RCSID("$NetBSD: reader.c,v 1.49 2012/03/05 02:20:18 christos Exp $");
 #include "netpgpsdk.h"
 #include "netpgpdefs.h"
 #include "netpgpdigest.h"
+#include "validate.h"
 
 /* data from partial blocks is queued up in virtual block in stream */
 static int
@@ -1726,6 +1727,9 @@ pgp_reader_push_se_ip_data(pgp_stream_t *stream, pgp_crypt_t *decrypt,
 		se_ip->decrypt = decrypt;
 		pgp_reader_push(stream, se_ip_data_reader, se_ip_data_destroyer,
 				se_ip);
+        
+        // Testing:
+        stream->readinfo.accumulate = 1;
 	}
 }
 
@@ -2122,6 +2126,8 @@ pgp_cb_ret_t
 pgp_litdata_cb(const pgp_packet_t *pkt, pgp_cbdata_t *cbinfo)
 {
 	const pgp_contents_t	*content = &pkt->u;
+    
+    
 
 	if (pgp_get_debug_level(__FILE__)) {
 		printf("pgp_litdata_cb: ");
@@ -2151,6 +2157,58 @@ pgp_litdata_cb(const pgp_packet_t *pkt, pgp_cbdata_t *cbinfo)
 	}
 
 	return PGP_RELEASE_MEMORY;
+}
+
+static char    *
+userid_to_id(const uint8_t *userid, char *id)
+{
+    static const char *hexes = "0123456789abcdef";
+    int		   i;
+    
+    for (i = 0; i < 8 ; i++) {
+        id[i * 2] = hexes[(unsigned)(userid[i] & 0xf0) >> 4];
+        id[(i * 2) + 1] = hexes[userid[i] & 0xf];
+    }
+    id[8 * 2] = 0x0;
+    return id;
+}
+
+pgp_cb_ret_t
+pgp_sig_cb(const pgp_packet_t *pkt, pgp_cbdata_t *cbinfo)
+{
+    const pgp_contents_t	*content = &pkt->u;
+    
+    if (pgp_get_debug_level(__FILE__)) {
+        printf("pgp_litdata_cb: ");
+        pgp_print_packet(&cbinfo->printstate, pkt);
+    }
+    
+    /* Read data from packet into static buffer */
+    switch (pkt->tag) {
+        case PGP_PTAG_CT_SIGNATURE_FOOTER:
+        case PGP_PTAG_CT_SIGNATURE:
+            /* if writer enabled, use it */
+            if (cbinfo->output) {
+                if (pgp_get_debug_level(__FILE__)) {
+                    printf("pgp_sig_cb: length is %u\n",
+                           content->litdata_body.length);
+                }
+                
+                unsigned from = 0;
+                const pgp_key_t *signer_key = pgp_getkeybyid(cbinfo->io, cbinfo->cryptinfo.pubring, content->sig.info.signer_id, &from, NULL);
+                
+                char keyid[16 + 1];
+                userid_to_id(signer_key->sigid, keyid);                
+                pgp_write(cbinfo->output, keyid, 16);
+            
+            }
+            break;
+            
+        default:
+            break;
+    }
+    
+    return PGP_RELEASE_MEMORY;
 }
 
 pgp_cb_ret_t
