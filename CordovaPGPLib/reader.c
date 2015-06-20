@@ -1728,7 +1728,7 @@ pgp_reader_push_se_ip_data(pgp_stream_t *stream, pgp_crypt_t *decrypt,
 		pgp_reader_push(stream, se_ip_data_reader, se_ip_data_destroyer,
 				se_ip);
         
-        // Testing:
+        // Need accumulate set to 1 so we can parse signatures:
         stream->readinfo.accumulate = 1;
 	}
 }

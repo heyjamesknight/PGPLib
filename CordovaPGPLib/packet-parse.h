@@ -135,7 +135,6 @@ pgp_cb_ret_t pgp_stacked_callback(const pgp_packet_t *,
 pgp_reader_t *pgp_readinfo(pgp_stream_t *);
 
 int pgp_parse(pgp_stream_t *, const int);
-int pgp_parse2(pgp_stream_t *, const int);
 
 /** Used to specify whether subpackets should be returned raw, parsed
 * or ignored.  */
