@@ -108,12 +108,12 @@ typedef void (^CordovaPGPErrorBlock)(NSError *);
         // Decrypt the data:
         PGP *decryptor = [PGP decryptorWithPrivateKey:privateKey];
 
-        [decryptor decryptAndVerifyData:[msg dataUsingEncoding:NSUTF8StringEncoding] publicKeys:publicKeys completionBlock:^(NSString *decryptedMessage, NSArray *verifiedKeyIds) {
+        [decryptor decryptAndVerifyData:[msg dataUsingEncoding:NSUTF8StringEncoding] publicKeys:publicKeys completionBlock:^(NSString *decryptedMessage, NSArray *verifiedUserIds) {
             
             NSMutableArray *verifiedSignatures = [NSMutableArray array];
             
-            for (NSString *keyId in verifiedKeyIds) {
-                [verifiedSignatures addObject:@{@"keyid": keyId, @"valid": @YES}];
+            for (NSString *userId in verifiedUserIds) {
+                [verifiedSignatures addObject:@{@"userId": userId, @"valid": @YES}];
             }
             
             NSDictionary *result = @{@"text": decryptedMessage, @"signatures": [NSArray arrayWithArray:verifiedSignatures]};

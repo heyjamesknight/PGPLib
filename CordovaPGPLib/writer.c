@@ -206,6 +206,10 @@ pgp_writer_info_finalise(pgp_error_t **errors, pgp_writer_t *writer)
 {
 	unsigned   ret = 1;
 
+    if (writer == NULL) {
+        return 0;
+    }
+    
 	if (writer->finaliser) {
 		ret = writer->finaliser(errors, writer);
 		writer->finaliser = NULL;

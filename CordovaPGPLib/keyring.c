@@ -271,7 +271,7 @@ decrypt_cb(const pgp_packet_t *pkt, pgp_cbdata_t *cbinfo)
 		return PGP_FINISHED;
 
 	case PGP_PARSER_ERROR:
-		fprintf(stderr, "parse error: %s\n", content->error);
+//		fprintf(stderr, "parse error: %s\n", content->error);
 		return PGP_FINISHED;
 
 	case PGP_PTAG_CT_SECRET_KEY:

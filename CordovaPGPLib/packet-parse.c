@@ -694,6 +694,11 @@ limread_mpi(BIGNUM **pbn, pgp_region_t *region, pgp_stream_t *stream)
 		return 0;
 	}
 	*pbn = BN_bin2bn(buf, (int)length, NULL);
+    
+//    printf("M:\n");
+//    BN_print_fp(stdout, *pbn);
+//    printf("\n");
+    
 	return 1;
 }
 
@@ -2149,57 +2154,6 @@ parse_hash_init(pgp_stream_t *stream, pgp_hash_alg_t type,
 }
 
 /**
-   \ingroup Core_ReadPackets
-   \brief Parse a One Pass Signature packet
-*/
-static int 
-parse_one_pass(pgp_region_t * region, pgp_stream_t * stream)
-{
-	pgp_packet_t	pkt;
-	uint8_t		c = 0x0;
-
-	if (!limread(&pkt.u.one_pass_sig.version, 1, region, stream)) {
-		return 0;
-	}
-	if (pkt.u.one_pass_sig.version != 3) {
-		PGP_ERROR_1(&stream->errors, PGP_E_PROTO_BAD_ONE_PASS_SIG_VRSN,
-			    "Bad one-pass signature version (%d)",
-			    pkt.u.one_pass_sig.version);
-		return 0;
-	}
-	if (!limread(&c, 1, region, stream)) {
-		return 0;
-	}
-	pkt.u.one_pass_sig.sig_type = (pgp_sig_type_t)c;
-
-	if (!limread(&c, 1, region, stream)) {
-		return 0;
-	}
-	pkt.u.one_pass_sig.hash_alg = (pgp_hash_alg_t)c;
-
-	if (!limread(&c, 1, region, stream)) {
-		return 0;
-	}
-	pkt.u.one_pass_sig.key_alg = (pgp_pubkey_alg_t)c;
-
-	if (!limread(pkt.u.one_pass_sig.keyid,
-			  (unsigned)sizeof(pkt.u.one_pass_sig.keyid),
-			  region, stream)) {
-		return 0;
-	}
-
-	if (!limread(&c, 1, region, stream)) {
-		return 0;
-	}
-	pkt.u.one_pass_sig.nested = !!c;
-	CALLBACK(PGP_PTAG_CT_1_PASS_SIG, &stream->cbinfo, &pkt);
-	/* XXX: we should, perhaps, let the app choose whether to hash or not */
-	parse_hash_init(stream, pkt.u.one_pass_sig.hash_alg,
-			    pkt.u.one_pass_sig.keyid);
-	return 1;
-}
-
-/**
  \ingroup Core_ReadPackets
  \brief Parse a Trust packet
 */
@@ -3025,36 +2979,6 @@ parse_se_ip_data(pgp_region_t *region, pgp_stream_t *stream)
 	 * once decrypted, so recursively handle them
 	 */
 	return decrypt_se_ip_data(PGP_PTAG_CT_SE_IP_DATA_BODY, region, stream);
-}
-
-static int
-parse_se_ip_data2(pgp_region_t *region, pgp_stream_t *stream)
-{
-    pgp_packet_t	pkt;
-    uint8_t		c = 0x0;
-    
-    if (!limread(&c, 1, region, stream)) {
-        return 0;
-    }
-    pkt.u.se_ip_data_header = c;
-    if (pgp_get_debug_level(__FILE__)) {
-        (void) fprintf(stderr, "parse_se_ip_data: data header %d\n", c);
-    }
-    if (pkt.u.se_ip_data_header != PGP_SE_IP_DATA_VERSION) {
-        (void) fprintf(stderr, "parse_se_ip_data: bad version\n");
-        return 0;
-    }
-    
-    if (pgp_get_debug_level(__FILE__)) {
-        (void) fprintf(stderr, "parse_se_ip_data: region %d,%d\n",
-                       region->readc, region->length);
-        hexdump(stderr, "compressed region", stream->virtualpkt, stream->virtualc);
-    }
-    /*
-     * The content of an encrypted data packet is more OpenPGP packets
-     * once decrypted, so recursively handle them
-     */
-    return decrypt_se_ip_data(PGP_PTAG_CT_SE_IP_DATA_BODY, region, stream);
 }
 
 /**
