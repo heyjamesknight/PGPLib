@@ -2811,6 +2811,7 @@ parse_pk_sesskey(pgp_region_t *region,
 		(void) fprintf(stderr, "got pk session key via callback\n");
 	}
 
+    // NOTE: Get the RSA proto out:
 	pgp_crypt_any(&stream->decrypt, pkt.u.pk_sesskey.symm_alg);
 	iv = calloc(1, stream->decrypt.blocksize);
 	if (iv == NULL) {

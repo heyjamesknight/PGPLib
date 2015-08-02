@@ -368,8 +368,8 @@ aes256_init(pgp_crypt_t *crypt)
 		free(crypt->encrypt_key);
 		crypt->encrypt_key = NULL;
 		return 0;
-	}
-	if (crypt->decrypt_key) {
+//	}
+//	if (crypt->decrypt_key) {
 		free(crypt->decrypt_key);
 	}
 	if ((crypt->decrypt_key = calloc(1, sizeof(AES_KEY))) == NULL) {
